@@ -10,7 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:reset": "prisma db push --force-reset && prisma db seed",
-    "setup": "prisma db push && prisma db seed",
+    "db:setup": "prisma db push && prisma db seed",
     "postinstall": "prisma generate"
   },
   "prisma": {
