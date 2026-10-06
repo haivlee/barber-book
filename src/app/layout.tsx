@@ -5,7 +5,7 @@ import { shop } from "@/config/shop";
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-sans",
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -37,10 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}
+    >
+      <body className="antialiased">
         {children}
         <Toaster theme="light" richColors position="top-center" />
       </body>
