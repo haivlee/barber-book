@@ -8,6 +8,7 @@ A responsive website for a barber shop where customers see real open times, requ
 - **Booking flow** (`/book`): pick a service, a barber (or "Any barber"), a day on the calendar, and an open time, then enter contact details and review. Fully booked and closed days are greyed out.
 - **Booking status page** (`/booking/<code>`): shows Pending / Confirmed / Declined / Cancelled, refreshes automatically while pending, and lets the customer cancel.
 - **Barber dashboard** (`/admin`): password-protected. Requests, Today, and Upcoming tabs; confirm or decline with an optional message; filter by barber; refreshes every 15 seconds and pops a toast when new requests arrive.
+- **Zalo, phone and walk-in bookings** (`/admin/bookings/new`): when a customer books by messaging on Zalo, the barber adds it from the dashboard ("From Zalo" button). Paste the Zalo message to auto-fill the phone number, choose a real open time, and save it as confirmed or pending. The slot is blocked on the website right away, and you get a ready-to-send message (Vietnamese or English) with the booking link, a Copy button and an "Open Zalo chat" deep link (`zalo.me/<phone>`). Every dashboard card also has a "Message" button to resend it.
 - **No double booking**: pending and confirmed bookings both hold their slot, and every booking is re-checked inside a database transaction before it is saved.
 
 ## Tech stack
@@ -60,6 +61,15 @@ Barber dashboard: http://localhost:3457/admin (default password `barber123`, set
 ## Notifications
 
 Booking events (requested, confirmed, declined, cancelled) go through [`src/lib/notify.ts`](src/lib/notify.ts). They are logged to the server console for now; replace the function body with Resend (email) or Twilio (SMS) to notify customers and barbers for real.
+
+## Zalo workflow
+
+1. A customer messages the shop on Zalo asking for a time.
+2. In `/admin`, tap **From Zalo**. Paste their message (the phone number is extracted and the message is kept as a note), enter their name, and pick the service, barber and an open time. Staff can book times inside the 30-minute online lead time.
+3. Save as **Confirmed** (already agreed in chat) or **Pending** (hold the slot while you check).
+4. Copy the generated message and send it back in Zalo, or tap **Open Zalo chat**. The link lets the customer view or cancel the booking on the website.
+
+Bookings are tagged with their source (`WEBSITE`, `ZALO`, `PHONE`, `WALK_IN`) and show a "via Zalo" badge on the dashboard. A fully automatic Zalo integration (reading messages through the Zalo Official Account API) would need an approved OA and API credentials; this workflow works today with no setup.
 
 ## Deploying
 
