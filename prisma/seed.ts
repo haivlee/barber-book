@@ -140,12 +140,18 @@ async function main() {
   }
 
   // A handful of upcoming bookings so availability and the dashboard look lived-in.
-  const plan: { dayOffset: number; barberIdx: number; serviceIdx: number; status: string }[] = [
+  const plan: {
+    dayOffset: number;
+    barberIdx: number;
+    serviceIdx: number;
+    status: string;
+    source?: string;
+  }[] = [
     { dayOffset: 1, barberIdx: 0, serviceIdx: 0, status: "CONFIRMED" },
     { dayOffset: 1, barberIdx: 1, serviceIdx: 1, status: "PENDING" },
     { dayOffset: 2, barberIdx: 2, serviceIdx: 2, status: "PENDING" },
     { dayOffset: 2, barberIdx: 0, serviceIdx: 4, status: "CONFIRMED" },
-    { dayOffset: 3, barberIdx: 1, serviceIdx: 3, status: "CONFIRMED" },
+    { dayOffset: 3, barberIdx: 1, serviceIdx: 3, status: "CONFIRMED", source: "ZALO" },
     { dayOffset: 4, barberIdx: 2, serviceIdx: 0, status: "PENDING" },
   ];
 
@@ -174,6 +180,8 @@ async function main() {
         customerName: customer.name,
         customerPhone: customer.phone,
         customerEmail: customer.email,
+        source: p.source ?? "WEBSITE",
+        customerZalo: p.source === "ZALO" ? customer.phone : null,
         startAt,
         endAt,
         status: p.status,

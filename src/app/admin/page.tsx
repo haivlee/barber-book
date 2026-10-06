@@ -1,12 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, CalendarDays, ExternalLink, Inbox, LogOut } from "lucide-react";
-import { logout } from "@/app/admin/actions";
+import { CalendarCheck, CalendarDays, Inbox, MessageCircle, Plus } from "lucide-react";
+import { AdminHeader } from "@/components/admin/admin-header";
 import { BookingCard, type AdminBooking } from "@/components/admin/booking-card";
 import { PendingWatcher } from "@/components/admin/pending-watcher";
 import { AutoRefresh } from "@/components/auto-refresh";
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from "@/lib/db";
@@ -34,8 +33,10 @@ function toAdmin(b: BookingWithRelations): AdminBooking {
     startAt: b.startAt.toISOString(),
     endAt: b.endAt.toISOString(),
     createdAt: b.createdAt.toISOString(),
+    source: b.source,
     customerName: b.customerName,
     customerPhone: b.customerPhone,
+    customerZalo: b.customerZalo,
     customerEmail: b.customerEmail,
     note: b.note,
     barberName: b.barber.name,
@@ -91,42 +92,30 @@ export default async function AdminPage({
       <AutoRefresh intervalMs={15_000} />
       <PendingWatcher count={pendingTotal} />
 
-      <header className="sticky top-0 z-30 bg-[oklch(0.18_0.012_60)] text-[oklch(0.97_0.01_85)]">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Logo href="/admin" />
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              size="lg"
-              className="hidden text-inherit hover:bg-white/10 hover:text-inherit sm:inline-flex"
-            >
-              <Link href="/" target="_blank">
-                View site <ExternalLink />
-              </Link>
-            </Button>
-            <form action={logout}>
-              <Button
-                type="submit"
-                variant="ghost"
-                size="lg"
-                className="text-inherit hover:bg-white/10 hover:text-inherit"
-              >
-                <LogOut /> <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">{formatDateKeyLong(today)}</p>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {pendingTotal > 0
-              ? `${pendingTotal} request${pendingTotal === 1 ? "" : "s"} waiting`
-              : "You're all caught up"}
-          </h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{formatDateKeyLong(today)}</p>
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {pendingTotal > 0
+                ? `${pendingTotal} request${pendingTotal === 1 ? "" : "s"} waiting`
+                : "You're all caught up"}
+            </h1>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <Button asChild size="xl" className="bg-[#0068ff] text-white hover:bg-[#0068ff]/90">
+              <Link href="/admin/bookings/new?source=zalo">
+                <MessageCircle data-icon="inline-start" /> From Zalo
+              </Link>
+            </Button>
+            <Button asChild size="xl" variant="outline">
+              <Link href="/admin/bookings/new?source=phone">
+                <Plus data-icon="inline-start" /> Add booking
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-3">

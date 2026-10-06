@@ -49,10 +49,13 @@ export function computeSlots(opts: {
   barbers: BarberWithHours[];
   busy: BusyRange[];
   now?: Date;
+  /** Staff can book inside the customer lead time (walk-ins, same-hour Zalo requests). */
+  staff?: boolean;
 }): Slot[] {
   const { dateKey, durationMin, barbers, busy } = opts;
   const now = opts.now ?? new Date();
-  const earliest = now.getTime() + shop.booking.minLeadTimeMin * MINUTE;
+  const leadMin = opts.staff ? 0 : shop.booking.minLeadTimeMin;
+  const earliest = now.getTime() + leadMin * MINUTE;
   const weekday = weekdayOf(dateKey);
   const byTime = new Map<string, Slot>();
 
@@ -114,7 +117,7 @@ async function loadInputs(
 }
 
 export async function getSlotsForDay(
-  opts: { serviceId: string; barberId?: string | null; dateKey: string },
+  opts: { serviceId: string; barberId?: string | null; dateKey: string; staff?: boolean },
   client: Client = db,
 ): Promise<Slot[] | null> {
   if (!isWithinBookingWindow(opts.dateKey)) return [];
@@ -129,6 +132,7 @@ export async function getSlotsForDay(
     durationMin: inputs.service.durationMin,
     barbers: inputs.barbers,
     busy: inputs.busy,
+    staff: opts.staff,
   });
 }
 
@@ -136,6 +140,7 @@ export async function getSlotsForDay(
 export async function getOpenDays(opts: {
   serviceId: string;
   barberId?: string | null;
+  staff?: boolean;
 }): Promise<Record<string, number> | null> {
   const { first, last } = bookingWindow();
   const inputs = await loadInputs(db, { ...opts, fromKey: first, toKey: last });
@@ -148,6 +153,7 @@ export async function getOpenDays(opts: {
       durationMin: inputs.service.durationMin,
       barbers: inputs.barbers,
       busy: inputs.busy,
+      staff: opts.staff,
     }).length;
   }
   return result;
@@ -177,7 +183,7 @@ export async function findNextSlot(serviceId: string, days = 7) {
 /** Returns the barber that should take the slot, or null when it is no longer free. */
 export async function resolveSlot(
   client: Client,
-  opts: { serviceId: string; barberId?: string | null; startAt: Date },
+  opts: { serviceId: string; barberId?: string | null; startAt: Date; staff?: boolean },
 ): Promise<string | null> {
   const dateKey = formatInShop(opts.startAt, "yyyy-MM-dd");
   const time = formatInShop(opts.startAt, "HH:mm");

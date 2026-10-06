@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, format } from "date-fns";
+import { addDays, format, type Locale } from "date-fns";
 import { shop } from "@/config/shop";
 
 const TZ = shop.timeZone;
@@ -37,8 +37,12 @@ export function isValidDateKey(value: string): boolean {
   return !Number.isNaN(d.getTime()) && format(d, "yyyy-MM-dd") === value;
 }
 
-export function formatInShop(date: Date | string | number, pattern: string): string {
-  return format(new TZDate(new Date(date), TZ), pattern);
+export function formatInShop(
+  date: Date | string | number,
+  pattern: string,
+  options?: { locale?: Locale },
+): string {
+  return format(new TZDate(new Date(date), TZ), pattern, options);
 }
 
 export function formatTime(date: Date | string | number): string {

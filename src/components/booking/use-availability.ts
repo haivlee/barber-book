@@ -44,13 +44,19 @@ function qs(params: Record<string, string | null | undefined>) {
   return sp.toString();
 }
 
-export function useOpenDays(serviceId: string | null, barberId: string | null) {
-  const url = serviceId ? `/api/availability/days?${qs({ serviceId, barberId })}` : null;
+export function useOpenDays(serviceId: string | null, barberId: string | null, staff = false) {
+  const base = staff ? "/api/admin/availability" : "/api/availability";
+  const url = serviceId ? `${base}/days?${qs({ serviceId, barberId })}` : null;
   return useJson(url, (json) => (json as { days: Record<string, number> }).days);
 }
 
-export function useSlots(serviceId: string | null, barberId: string | null, date: string | null) {
-  const url =
-    serviceId && date ? `/api/availability?${qs({ serviceId, barberId, date })}` : null;
+export function useSlots(
+  serviceId: string | null,
+  barberId: string | null,
+  date: string | null,
+  staff = false,
+) {
+  const base = staff ? "/api/admin/availability" : "/api/availability";
+  const url = serviceId && date ? `${base}?${qs({ serviceId, barberId, date })}` : null;
   return useJson(url, (json) => (json as { slots: SlotOption[] }).slots);
 }

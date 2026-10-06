@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock, Loader2, Mail, MessageSquare, Phone, X } from "lucide-react";
+import { Check, Clock, Loader2, Mail, MessageCircle, MessageSquare, Phone, Send, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -18,8 +18,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { zaloChatUrl } from "@/lib/share-message";
 import { formatDuration, formatInShop, formatPrice, formatTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
+import { ShareMessagePanel } from "./share-message-panel";
 
 export type AdminBooking = {
   id: string;
@@ -28,8 +30,10 @@ export type AdminBooking = {
   startAt: string;
   endAt: string;
   createdAt: string;
+  source: string;
   customerName: string;
-  customerPhone: string;
+  customerPhone: string | null;
+  customerZalo: string | null;
   customerEmail: string | null;
   note: string | null;
   barberName: string;
@@ -43,6 +47,12 @@ const statusBadge: Record<string, { label: string; className: string }> = {
   CONFIRMED: { label: "Confirmed", className: "bg-success/15 text-[oklch(0.4_0.1_155)]" },
   DECLINED: { label: "Declined", className: "bg-destructive/10 text-destructive" },
   CANCELLED: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
+};
+
+const sourceBadge: Record<string, { label: string; className: string } | undefined> = {
+  ZALO: { label: "Zalo", className: "bg-[#0068ff]/10 text-[#0068ff]" },
+  PHONE: { label: "Phone", className: "bg-secondary text-secondary-foreground" },
+  WALK_IN: { label: "Walk-in", className: "bg-secondary text-secondary-foreground" },
 };
 
 function timeAgo(iso: string) {
@@ -59,6 +69,10 @@ export function BookingCard({ booking, showDate = true }: { booking: AdminBookin
   const [pending, start] = useTransition();
   const [action, setAction] = useState<"confirm" | "decline" | "cancel" | null>(null);
   const [dialog, setDialog] = useState<"decline" | "cancel" | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const source = sourceBadge[booking.source];
+  const zaloUrl = zaloChatUrl(booking.customerZalo ?? (booking.source === "ZALO" ? booking.customerPhone : null));
+  const canMessage = booking.source !== "WALK_IN" || !!booking.customerPhone;
   const [note, setNote] = useState("");
   const badge = statusBadge[booking.status] ?? statusBadge.PENDING;
 
@@ -111,6 +125,7 @@ export function BookingCard({ booking, showDate = true }: { booking: AdminBookin
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-medium">{booking.customerName}</p>
             <Badge className={badge.className}>{badge.label}</Badge>
+            {source && <Badge className={source.className}>via {source.label}</Badge>}
             <span className="font-mono text-xs text-muted-foreground">#{booking.code}</span>
           </div>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
@@ -127,9 +142,21 @@ export function BookingCard({ booking, showDate = true }: { booking: AdminBookin
             <span>{booking.barberName}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            <a href={`tel:${booking.customerPhone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1.5 hover:underline">
-              <Phone className="size-3.5 text-muted-foreground" /> {booking.customerPhone}
-            </a>
+            {booking.customerPhone && (
+              <a href={`tel:${booking.customerPhone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1.5 hover:underline">
+                <Phone className="size-3.5 text-muted-foreground" /> {booking.customerPhone}
+              </a>
+            )}
+            {booking.customerZalo &&
+              (zaloUrl ? (
+                <a href={zaloUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#0068ff] hover:underline">
+                  <MessageCircle className="size-3.5" /> Zalo: {booking.customerZalo}
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  <MessageCircle className="size-3.5 text-[#0068ff]" /> Zalo: {booking.customerZalo}
+                </span>
+              ))}
             {booking.customerEmail && (
               <a href={`mailto:${booking.customerEmail}`} className="inline-flex items-center gap-1.5 break-all hover:underline">
                 <Mail className="size-3.5 text-muted-foreground" /> {booking.customerEmail}
@@ -176,9 +203,43 @@ export function BookingCard({ booking, showDate = true }: { booking: AdminBookin
                 Cancel
               </Button>
             )}
+            {canMessage && (
+              <Button
+                size="lg"
+                variant="ghost"
+                className="flex-1 px-4 sm:flex-none"
+                onClick={() => setShareOpen(true)}
+              >
+                <Send /> Message
+              </Button>
+            )}
           </div>
         )}
       </div>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Send booking details</DialogTitle>
+            <DialogDescription>
+              Copy this into your Zalo chat with {booking.customerName}. The link lets them check or
+              cancel the booking.
+            </DialogDescription>
+          </DialogHeader>
+          <ShareMessagePanel
+            booking={{
+              code: booking.code,
+              status: booking.status,
+              customerName: booking.customerName,
+              serviceName: booking.serviceName,
+              durationMin: booking.durationMin,
+              barberName: booking.barberName,
+              startAt: booking.startAt,
+            }}
+            contact={booking.customerZalo || booking.customerPhone}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent>

@@ -48,6 +48,7 @@ model WorkingHours {
 }
 
 /// status: PENDING | CONFIRMED | DECLINED | CANCELLED
+/// source: WEBSITE | ZALO | PHONE | WALK_IN
 model Booking {
   id            String   @id @default(cuid())
   code          String   @unique
@@ -55,9 +56,12 @@ model Booking {
   barber        Barber   @relation(fields: [barberId], references: [id])
   serviceId     String
   service       Service  @relation(fields: [serviceId], references: [id])
+  source        String   @default("WEBSITE")
   customerName  String
-  customerPhone String
+  customerPhone String?
   customerEmail String?
+  /// Zalo display name or the phone number the customer uses on Zalo
+  customerZalo  String?
   note          String?
   startAt       DateTime
   endAt         DateTime
