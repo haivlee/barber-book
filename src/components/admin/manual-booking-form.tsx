@@ -72,6 +72,13 @@ export function ManualBookingForm({
   const slots = useSlots(saved ? null : serviceId, barberId, date, true);
   const service = services.find((s) => s.id === serviceId) ?? null;
 
+  const reloadSlots = slots.reload;
+  useEffect(() => {
+    if (saved) return;
+    const id = window.setInterval(reloadSlots, 60_000);
+    return () => window.clearInterval(id);
+  }, [saved, reloadSlots]);
+
   useEffect(() => {
     if (openDays.status !== "ready") return;
     const days = openDays.data;

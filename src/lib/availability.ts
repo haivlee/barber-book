@@ -54,8 +54,9 @@ export function computeSlots(opts: {
 }): Slot[] {
   const { dateKey, durationMin, barbers, busy } = opts;
   const now = opts.now ?? new Date();
-  const leadMin = opts.staff ? 0 : shop.booking.minLeadTimeMin;
-  const earliest = now.getTime() + leadMin * MINUTE;
+  // Staff may book a slot that started moments ago (a walk-in sitting down "now").
+  const offsetMin = opts.staff ? -shop.booking.slotIntervalMin : shop.booking.minLeadTimeMin;
+  const earliest = now.getTime() + offsetMin * MINUTE;
   const weekday = weekdayOf(dateKey);
   const byTime = new Map<string, Slot>();
 

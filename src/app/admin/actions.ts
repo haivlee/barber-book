@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { shop } from "@/config/shop";
 import { requireBarber } from "@/lib/auth";
 import { resolveSlot } from "@/lib/availability";
 import { newBookingCode } from "@/lib/booking-code";
@@ -164,10 +165,13 @@ export async function createManualBooking(input: ManualBookingInput): Promise<Ma
     };
   } catch (err) {
     if (err instanceof SlotTakenError) {
+      const passed = startAt.getTime() < Date.now() - shop.booking.slotIntervalMin * 60_000;
       return {
         ok: false,
         reason: "slot_taken",
-        message: "That time was just taken. Pick another slot.",
+        message: passed
+          ? "That time has already passed. Pick a later slot."
+          : "That time was just taken. Pick another slot.",
       };
     }
     console.error("createManualBooking failed", err);
