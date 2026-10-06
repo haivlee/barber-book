@@ -270,7 +270,7 @@ export function ManualBookingForm({
                 id="customerName"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Name as shown on Zalo"
+                placeholder={source === "ZALO" ? "Name as shown on Zalo" : "Customer's name"}
                 className="h-11"
                 aria-invalid={!!errors.customerName}
               />
